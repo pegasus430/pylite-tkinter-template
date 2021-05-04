@@ -8,37 +8,43 @@ class Product:
     db_name = 'database.db'
 
     def __init__(self, window):
-        # Initializations 
+        # Initializations
         self.wind = window
-        self.wind.title('Products Application')
+        self.wind.title('Master Lists')
 
-        # Creating a Frame Container 
-        frame = LabelFrame(self.wind, text = 'Register new Product')
-        frame.grid(row = 0, column = 0, columnspan = 3, pady = 20)
+        # Creating a Master Frame Container 
+        master_frame = LabelFrame(self.wind, text = 'Register New Master Entity')
+        master_frame.grid(row = 0, column = 0, columnspan = 4, pady = 20)
 
-        # Name Input
-        Label(frame, text = 'Name: ').grid(row = 1, column = 0)
-        self.name = Entry(frame)
+        # Name
+        Label(master_frame, text = 'Name: ').grid(row = 1, column = 0)
+        self.name = Entry(master_frame)
         self.name.focus()
         self.name.grid(row = 1, column = 1)
 
-        # Price Input
-        Label(frame, text = 'Price: ').grid(row = 2, column = 0)
-        self.price = Entry(frame)
-        self.price.grid(row = 2, column = 1)
+        # Type
+        Label(master_frame, text = 'Type: ').grid(row = 2, column = 0)
+        self.type = Entry(master_frame)
+        self.type.grid(row = 2, column = 1)
+
+        # Description
+        Label(master_frame, text = 'Description: ').grid(row = 3, column = 0)
+        self.description = Entry(master_frame)
+        self.description.grid(row = 3, column = 1)
 
         # Button Add Product 
-        ttk.Button(frame, text = 'Save Product', command = self.add_product).grid(row = 3, columnspan = 2, sticky = W + E)
+        ttk.Button(master_frame, text = 'Save Master Entity', command = self.add_product).grid(row = 4, columnspan = 2, sticky = W + E)
 
-        # Output Messages 
+        # Output Messages
         self.message = Label(text = '', fg = 'red')
         self.message.grid(row = 3, column = 0, columnspan = 2, sticky = W + E)
 
         # Table
-        self.tree = ttk.Treeview(height = 10, columns = 2)
+        self.tree = ttk.Treeview(height = 10, columns=("#0","#1"))
         self.tree.grid(row = 4, column = 0, columnspan = 2)
         self.tree.heading('#0', text = 'Name', anchor = CENTER)
-        self.tree.heading('#1', text = 'Price', anchor = CENTER)
+        self.tree.heading('#1', text = 'Type', anchor = CENTER)
+        self.tree.heading('#2', text = 'Description', anchor = CENTER)
 
         # Buttons
         ttk.Button(text = 'DELETE', command = self.delete_product).grid(row = 5, column = 0, sticky = W + E)
@@ -70,18 +76,19 @@ class Product:
 
     # User Input Validation
     def validation(self):
-        return len(self.name.get()) != 0 and len(self.price.get()) != 0
+        return len(self.name.get()) != 0 and len(self.type.get()) != 0
 
     def add_product(self):
         if self.validation():
-            query = 'INSERT INTO product VALUES(NULL, ?, ?)'
-            parameters =  (self.name.get(), self.price.get())
+            query = 'INSERT INTO product VALUES(NULL, ?, ?, ?)'
+            parameters =  (self.name.get(), self.type.get(), self.description.get())
             self.run_query(query, parameters)
-            self.message['text'] = 'Product {} added Successfully'.format(self.name.get())
+            self.message['text'] = 'Master Entity {} added Successfully'.format(self.name.get())
             self.name.delete(0, END)
-            self.price.delete(0, END)
+            self.type.delete(0, END)
+            self.description.delete(0, END)
         else:
-            self.message['text'] = 'Name and Price is Required'
+            self.message['text'] = 'Name and Type is required'
         self.get_products()
 
     def delete_product(self):
