@@ -3,8 +3,10 @@ from tkinter import ttk
 from tkinter import *
 import sqlite3
 import tkinter.messagebox
-Master_table_name = 'Master'
-Detail_table_name = 'Detail'
+
+g_master_table_name = 'Master'
+g_detail_table_name = 'Detail'
+g_password = 'password'
 
 def run_query(query, parameters = ()):
     db_name = 'database.db'
@@ -15,10 +17,10 @@ def run_query(query, parameters = ()):
     return result
 
 def init_table():
-    # check the master and detail table exists in DB
-    query = f'CREATE TABLE IF NOT EXISTS {Master_table_name} (id INTEGER PRIMARY KEY AUTOINCREMENT, name text NOT NULL, type text NOT NULL, description text default NULL);'
+    # check  master and detail tables are existing in DB
+    query = f'CREATE TABLE IF NOT EXISTS {g_master_table_name} (id INTEGER PRIMARY KEY AUTOINCREMENT, name text NOT NULL, type text NOT NULL, description text default NULL);'
     run_query(query)
-    query = f'CREATE TABLE IF NOT EXISTS {Detail_table_name} (id INTEGER PRIMARY KEY AUTOINCREMENT, name text NOT NULL, type text NOT NULL, description text default NULL , master_id INTERGER NOT NULL, FOREIGN KEY(master_id) REFERENCES {Master_table_name}(id));'
+    query = f'CREATE TABLE IF NOT EXISTS {g_detail_table_name} (id INTEGER PRIMARY KEY AUTOINCREMENT, name text NOT NULL, type text NOT NULL, description text default NULL , master_id INTERGER NOT NULL, FOREIGN KEY(master_id) REFERENCES {g_master_table_name}(id));'
     run_query(query)
 
 master_type_list = (   
@@ -59,9 +61,9 @@ class Master:
         user_role_frame = LabelFrame(frame_container, text = 'Select the role')
         user_role_frame.grid(row = 0, column = 0)
         
-        # admin is selectd as default
+        # user is selectd as default
         self.var = IntVar()
-        self.var.set(1)                             
+        self.var.set(2)                             
         self.R1 = Radiobutton(user_role_frame, text="Admin", variable=self.var, value=1, command=self.select_admin)
         self.R1.pack( anchor = W )
         
@@ -125,12 +127,40 @@ class Master:
 
         # Filling the Rows
         self.get_Masters()
+
+        # disable all buttons
+        self.select_user()
     
+
     # select admin option
     def select_admin(self):
-        self.add_btn['state'] = 'enable'
-        self.del_btn['state'] = 'enable'
-        self.edit_btn['state'] = 'enable'
+        self.pwd_prompt = Toplevel()
+        self.pwd_prompt.title("Enter password")
+        self.pwd_prompt.minsize(200, 100)
+
+        Label(self.pwd_prompt, text='password').grid(row = 0, column = 2, padx=100)
+        
+        pwd_input = Entry(self.pwd_prompt, show="*")
+        pwd_input.grid(row =  1, column = 2, pady = 2)
+        
+
+        confirm_btn = ttk.Button(self.pwd_prompt, text = 'OK', command = lambda : self.check_admin_password(pwd_input.get().strip()))
+        confirm_btn.grid(row = 2, column = 2, pady = 1) 
+        
+        self.pwd_prompt.mainloop()
+        
+    # check admin password and allow the buttons
+    def check_admin_password(self, pwd):
+        if pwd == g_password:
+            self.pwd_prompt.destroy()
+            self.add_btn['state'] = 'enable'
+            self.del_btn['state'] = 'enable'
+            self.edit_btn['state'] = 'enable'
+            self.message['text'] = ''
+            
+        else:
+            self.message['fg'] = 'red'
+            self.message['text'] = 'Password is not correct !'
 
     # select normal user option
     def select_user(self):
@@ -157,7 +187,7 @@ class Master:
         for element in records:
             self.tree.delete(element)
         # getting data
-        query = f'SELECT * FROM {Master_table_name} ORDER BY id ASC'
+        query = f'SELECT * FROM {g_master_table_name} ORDER BY id ASC'
         db_rows = run_query(query)
         index = 0
         # filling data
@@ -171,7 +201,7 @@ class Master:
 
     def add_Master(self, frame_detail):
         if self.validation():
-            query = f'SELECT count(*) FROM {Master_table_name} WHERE name = ?'
+            query = f'SELECT count(*) FROM {g_master_table_name} WHERE name = ?'
             parameters = (self.name.get().strip(),)
             name_existance = run_query(query, parameters).fetchone()
            
@@ -180,7 +210,7 @@ class Master:
                 self.message['fg'] = 'red'
                 self.message['text'] = 'Master {} is already added. please insert another name !'.format(self.name.get().strip())
             else:
-                query = f'INSERT INTO {Master_table_name} (name, type, description)  VALUES(?, ?, ?)'
+                query = f'INSERT INTO {g_master_table_name} (name, type, description)  VALUES(?, ?, ?)'
                 parameters =  (self.name.get().strip(), self.type.get().strip(), self.description.get().strip())
                 run_query(query, parameters)
                 
@@ -211,9 +241,9 @@ class Master:
             
             master_id =  master_oject['values'][0]
             master_name =  master_oject['values'][1]
-            query = f'DELETE FROM {Master_table_name} where id = ?'
+            query = f'DELETE FROM {g_master_table_name} where id = ?'
             run_query(query, (master_id,))
-            query = f'DELETE FROM {Detail_table_name} where master_id = ?'
+            query = f'DELETE FROM {g_detail_table_name} where master_id = ?'
             run_query(query, (master_id,))
             self.message['fg'] = 'green'
             self.message['text'] = 'Record {} deleted Successfully'.format(master_name)
@@ -281,7 +311,7 @@ class Master:
         
     def edit_records(self, id, new_name, new_type, new_description):
         # must add chck module for name
-        query = f'SELECT count(*) FROM {Master_table_name} WHERE name = ? and id != ?'
+        query = f'SELECT count(*) FROM {g_master_table_name} WHERE name = ? and id != ?'
         parameters = (new_name,id)
         name_existance = run_query(query, parameters).fetchone()
         
@@ -290,7 +320,7 @@ class Master:
             self.message['fg'] = 'red'
             self.message['text'] = 'Master {} is already added. please insert another name !'.format(new_name)
         else:
-            query = f'UPDATE {Master_table_name} SET name = ?, type = ? , description = ? WHERE id= ?'
+            query = f'UPDATE {g_master_table_name} SET name = ?, type = ? , description = ? WHERE id= ?'
             parameters = (new_name, new_type, new_description , id)
             run_query(query, parameters)
             self.edit_wind.destroy()
@@ -307,7 +337,7 @@ class Detail:
         
         # admin is selectd as default
         self.var = IntVar()
-        self.var.set(1)                                      
+        self.var.set(2)                                      
         self.R1 = Radiobutton(user_role_frame, text="Admin", variable=self.var, value=1, command=self.select_admin)
         self.R1.pack( anchor = W )
         
@@ -384,20 +414,48 @@ class Detail:
 
         # Filling the Rows
         self.get_Details()
+        self.select_user()
     
     def get_master_name_list(self):
         name_list = ()
-        query = f'SELECT name FROM {Master_table_name}'
+        query = f'SELECT name FROM {g_master_table_name}'
         db_rows = run_query(query)
         for row in db_rows:
             name_list += (row[0],)
         return name_list
 
+       # select admin option
+    
     # select admin option
     def select_admin(self):
-        self.add_btn['state'] = 'enable'
-        self.del_btn['state'] = 'enable'
-        self.edit_btn['state'] = 'enable'
+        self.pwd_prompt = Toplevel()
+        self.pwd_prompt.title("Enter password")
+        self.pwd_prompt.minsize(200, 100)
+
+        Label(self.pwd_prompt, text='password').grid(row = 0, column = 2, padx=100)
+        
+        pwd_input = Entry(self.pwd_prompt, show="*")
+        pwd_input.grid(row =  1, column = 2, pady = 2)
+        
+
+        confirm_btn = ttk.Button(self.pwd_prompt, text = 'OK', command = lambda : self.check_admin_password(pwd_input.get().strip()))
+        confirm_btn.grid(row = 2, column = 2, pady = 1) 
+        
+        self.pwd_prompt.mainloop()
+        
+    # check admin password and allow the buttons
+    def check_admin_password(self, pwd):
+        if pwd == g_password:
+            self.pwd_prompt.destroy()
+            self.add_btn['state'] = 'enable'
+            self.del_btn['state'] = 'enable'
+            self.edit_btn['state'] = 'enable'
+            self.message['text'] = ''
+            
+        else:
+            self.message['fg'] = 'red'
+            self.message['text'] = 'Password is not correct !'
+
 
     # select normal user option
     def select_user(self):
@@ -424,7 +482,7 @@ class Detail:
         for element in records:
             self.tree.delete(element)
         # getting data
-        query = f'SELECT id, name, type, description, master_id FROM {Detail_table_name} ORDER BY id ASC'
+        query = f'SELECT id, name, type, description, master_id FROM {g_detail_table_name} ORDER BY id ASC'
         db_rows = run_query(query)
         index = 0
         # filling data
@@ -438,7 +496,7 @@ class Detail:
 
     def add_Detail(self):
         if self.validation():
-            query = f'SELECT count(*) FROM {Detail_table_name} WHERE name = ?'
+            query = f'SELECT count(*) FROM {g_detail_table_name} WHERE name = ?'
             parameters = (self.name.get().strip(),)
             name_existance = run_query(query, parameters).fetchone()
            
@@ -447,7 +505,7 @@ class Detail:
                 self.message['fg'] = 'red'
                 self.message['text'] = 'Detail {} is already added. please insert another name !'.format(self.name.get().strip())
             else:
-                query = f'INSERT INTO {Detail_table_name} (name, type, description, master_id)  VALUES(?, ?, ?, (SELECT id from {Master_table_name} where name = ?))'
+                query = f'INSERT INTO {g_detail_table_name} (name, type, description, master_id)  VALUES(?, ?, ?, (SELECT id from {g_master_table_name} where name = ?))'
                 parameters =  (self.name.get().strip(), self.type.get().strip(), self.description.get().strip(), self.m_name.get().strip())
                 run_query(query, parameters)
                 
@@ -474,7 +532,7 @@ class Detail:
             
             Detail_id =  Detail_oject['values'][0]
             Detail_name =  Detail_oject['values'][1]
-            query = f'DELETE FROM {Detail_table_name} WHERE id = ?'
+            query = f'DELETE FROM {g_detail_table_name} WHERE id = ?'
             run_query(query, (Detail_id, ))
             self.message['fg'] = 'green'
             self.message['text'] = 'Record {} deleted Successfully'.format(Detail_name)
@@ -502,7 +560,7 @@ class Detail:
             Detail_descrition =  Detail_oject['values'][3]
             Detail_master_id =  Detail_oject['values'][4]
             
-            query = f"select name from {Master_table_name} where id = ?"
+            query = f"select name from {g_master_table_name} where id = ?"
             result_row = run_query(query, (Detail_master_id,))
             result = result_row.fetchone()
             Detail_master_name = result[0]
@@ -553,7 +611,7 @@ class Detail:
         
     def edit_records(self, id, new_name, new_type, new_description, new_master_name_string):
         # must add chck module for name
-        query = f'SELECT count(*) FROM {Detail_table_name} WHERE name = ? and id != ?'
+        query = f'SELECT count(*) FROM {g_detail_table_name} WHERE name = ? and id != ?'
         parameters = (new_name,id)
         name_existance = run_query(query, parameters).fetchone()
         
@@ -562,7 +620,7 @@ class Detail:
             self.message['fg'] = 'red'
             self.message['text'] = 'Detail {} is already added. please insert another name !'.format(new_name)
         else:
-            query = f'UPDATE {Detail_table_name} SET name = ?, type = ? , description = ? , master_id= (select id from {Master_table_name} where name = ? )WHERE id= ?'
+            query = f'UPDATE {g_detail_table_name} SET name = ?, type = ? , description = ? , master_id= (select id from {g_master_table_name} where name = ? )WHERE id= ?'
             parameters = (new_name, new_type, new_description , new_master_name_string, id)
             run_query(query, parameters)
             self.edit_wind.destroy()
@@ -570,11 +628,13 @@ class Detail:
             self.message['text'] = 'Record {} updated successfully'.format(new_name)
             self.get_Details()
 
+# call back function to open help window as top level
 def helloCallBack():
         help_window = Toplevel()
-        help_window.title("help")
+        help_window.title("Help window")
         help_window.minsize(500, 200)
         Label(help_window, text = 'This is help window').grid(row = 0, column = 1)
+
 
 if __name__ == '__main__':
     init_table()
@@ -583,6 +643,7 @@ if __name__ == '__main__':
 
     help_btn = ttk.Button(window, text ="Help", command = helloCallBack)
     help_btn.pack()
+    
     # create a notebook
     notebook = ttk.Notebook(window)
     notebook.pack(pady=10, expand=True)
@@ -604,3 +665,6 @@ if __name__ == '__main__':
 
 
     window.mainloop()
+
+
+
