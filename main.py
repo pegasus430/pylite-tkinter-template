@@ -54,8 +54,7 @@ detail_type_list = (
             )
 
 class Master:
-    
-    def __init__(self, frame_container , frame_detail):
+    def __init__(self, frame_container, frame_detail):
 
         # Creating a User role container
         user_role_frame = LabelFrame(frame_container, text = 'Select the role')
@@ -72,7 +71,7 @@ class Master:
         self.R2.pack( anchor = W )
 
         # Creating a Frame Container 
-        frame = LabelFrame(frame_container, text = 'Register new Master')
+        frame = LabelFrame(frame_container, text = 'Register new master')
         frame.grid(row = 0, column = 0, columnspan = 5, pady = 10)
 
         # Name Input
@@ -106,17 +105,15 @@ class Master:
         self.message.grid(row = 3, column = 1, columnspan = 2, sticky = W + E)
 
         # Table
-        self.tree = ttk.Treeview(frame_container, height = 15, columns = (0,1,2,3), show='headings')
-        self.tree.grid(row = 4, column = 0, columnspan = 4)
-        self.tree.heading(0, text = 'ID',            anchor = CENTER, command=lambda _col=0: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(1, text = 'NAME',          anchor = CENTER, command=lambda _col=1: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(2, text = 'TYPE',          anchor = CENTER, command=lambda _col=2: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(3, text = 'DESCRIPTION',   anchor = CENTER, command=lambda _col=3: self.treeview_sort_column(self.tree, _col, False))
+        self.tree = ttk.Treeview(frame_container, height = 15, columns = (0,1,2), show='headings')
+        self.tree.grid(row = 4, column = 0, columnspan = 3)
+        self.tree.heading(0, text = 'NAME',          anchor = CENTER, command=lambda _col=0: self.treeview_sort_column(self.tree, _col, False))
+        self.tree.heading(1, text = 'TYPE',          anchor = CENTER, command=lambda _col=1: self.treeview_sort_column(self.tree, _col, False))
+        self.tree.heading(2, text = 'DESCRIPTION',   anchor = CENTER, command=lambda _col=2: self.treeview_sort_column(self.tree, _col, False))
 
         self.tree.column(0, anchor = 'center')
         self.tree.column(1, anchor = 'center')
         self.tree.column(2, anchor = 'center')
-        self.tree.column(3, anchor = 'center')
 
         # Buttons
         self.del_btn = ttk.Button(frame_container, text = 'DELETE', command = lambda frame_detail = frame_detail: self.delete_Master(frame_detail))
@@ -226,7 +223,7 @@ class Master:
                 
         else:
             self.message['fg'] = 'red'
-            self.message['text'] = 'Name and type are Required'
+            self.message['text'] = 'Name and type are required'
         self.get_Masters()
 
     def delete_Master(self, frame_detail):
@@ -246,13 +243,13 @@ class Master:
             query = f'DELETE FROM {g_detail_table_name} where master_id = ?'
             run_query(query, (master_id,))
             self.message['fg'] = 'green'
-            self.message['text'] = 'Record {} deleted Successfully'.format(master_name)
+            self.message['text'] = 'Record {} deleted successfully'.format(master_name)
             
             self.get_Masters()
             Detail(frame_detail)
         else: 
             self.message['fg'] = 'red'
-            self.message['text'] = 'Please select a Record'
+            self.message['text'] = 'Please select a record'
             return
 
     def edit_Master(self):
@@ -306,7 +303,7 @@ class Master:
            
         else: 
             self.message['fg'] = 'red'
-            self.message['text'] = 'Please select a Record'
+            self.message['text'] = 'Please select a record'
             return
         
     def edit_records(self, id, new_name, new_type, new_description):
@@ -346,7 +343,7 @@ class Detail:
         self.R2.pack( anchor = W )
 
         # Creating a Frame Container 
-        frame = LabelFrame(frame_container, text = 'Register new Detail')
+        frame = LabelFrame(frame_container, text = 'Register new detail')
         frame.grid(row = 0, column = 0, columnspan = 5, pady = 10)
 
         # Name Input
@@ -391,19 +388,17 @@ class Detail:
         self.message.grid(row = 3, column = 1, columnspan = 2, sticky = W + E)
 
         # Table
-        self.tree = ttk.Treeview(frame_container, height = 15, columns = (0,1,2,3,4), show='headings')
+        self.tree = ttk.Treeview(frame_container, height = 15, columns = (0,1,2,3), show='headings')
         self.tree.grid(row = 4, column = 0, columnspan = 4)
-        self.tree.heading(0, text = 'ID',            anchor = CENTER, command=lambda _col=0: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(1, text = 'NAME',          anchor = CENTER, command=lambda _col=1: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(2, text = 'TYPE',          anchor = CENTER, command=lambda _col=2: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(3, text = 'DESCRIPTION',   anchor = CENTER, command=lambda _col=3: self.treeview_sort_column(self.tree, _col, False))
-        self.tree.heading(4, text = 'Master_ID',   anchor = CENTER, command=lambda _col=4: self.treeview_sort_column(self.tree, _col, False))
+        self.tree.heading(0, text = 'NAME',          anchor = CENTER, command=lambda _col=0: self.treeview_sort_column(self.tree, _col, False))
+        self.tree.heading(1, text = 'TYPE',          anchor = CENTER, command=lambda _col=1: self.treeview_sort_column(self.tree, _col, False))
+        self.tree.heading(2, text = 'DESCRIPTION',   anchor = CENTER, command=lambda _col=2: self.treeview_sort_column(self.tree, _col, False))
+        self.tree.heading(3, text = 'Master_ID',     anchor = CENTER, command=lambda _col=3: self.treeview_sort_column(self.tree, _col, False))
 
         self.tree.column(0, anchor = 'center')
         self.tree.column(1, anchor = 'center')
         self.tree.column(2, anchor = 'center')
         self.tree.column(3, anchor = 'center')
-        self.tree.column(4, anchor = 'center')
 
         # Buttons
         self.del_btn = ttk.Button(frame_container, text = 'DELETE', command = self.delete_Detail)
@@ -510,14 +505,14 @@ class Detail:
                 run_query(query, parameters)
                 
                 self.message['fg'] = 'green'
-                self.message['text'] = 'Detail {} added Successfully'.format(self.name.get())
+                self.message['text'] = 'Detail {} added successfully'.format(self.name.get())
 
                 self.name.delete(0, END)
                 self.type.delete(0, END)
                 self.description.delete(0, END)
         else:
             self.message['fg'] = 'red'
-            self.message['text'] = 'Name , type and parent Master are Required'
+            self.message['text'] = 'Name, type and parent master are required'
         self.get_Details()
 
     def delete_Detail(self):
@@ -535,12 +530,12 @@ class Detail:
             query = f'DELETE FROM {g_detail_table_name} WHERE id = ?'
             run_query(query, (Detail_id, ))
             self.message['fg'] = 'green'
-            self.message['text'] = 'Record {} deleted Successfully'.format(Detail_name)
+            self.message['text'] = 'Record {} deleted successfully'.format(Detail_name)
             
             self.get_Details()
         else: 
             self.message['fg'] = 'red'
-            self.message['text'] = 'Please select a Record'
+            self.message['text'] = 'Please select a record'
             return
 
     def edit_Detail(self):
@@ -606,7 +601,7 @@ class Detail:
            
         else: 
             self.message['fg'] = 'red'
-            self.message['text'] = 'Please select a Record'
+            self.message['text'] = 'Please select a record'
             return
         
     def edit_records(self, id, new_name, new_type, new_description, new_master_name_string):
