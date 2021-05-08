@@ -26,31 +26,13 @@ def init_table():
 master_type_list = (   
                 'MType1', 
                 'MType2',
-                'MType3',
-                'MType4',
-                'MType5',
-                'MType6',
-                'MType7',
-                'MType8',
-                'MType9',
-                'MType10',
-                'MType11',
-                'MType12'
+                'MType3'
             )
 
 detail_type_list = (   
                 'DType1', 
                 'DType2',
-                'DType3',
-                'DType4',
-                'DType5',
-                'DType6',
-                'DType7',
-                'DType8',
-                'DType9',
-                'DType10',
-                'DType11',
-                'DType12'
+                'DType3'
             )
 
 class Master:
