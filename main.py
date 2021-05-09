@@ -222,7 +222,6 @@ class Master:
             
             self.message['text'] = ''
             
-            # master_id =  master_oject['values'][0]
             master_name =  master_oject['values'][0]
             master_type =  master_oject['values'][1]
             master_descrition =  master_oject['values'][2]
@@ -286,7 +285,7 @@ class Detail:
         self.name.focus()
         self.name.grid(row = 1, column = 1)
 
-        # type combobox
+        # Type combobox
         Label(frame, text = 'Type: ').grid(row = 2, column = 0)
         n = tk.StringVar()
         self.type = ttk.Combobox(frame, width = 17, textvariable = n)
@@ -296,7 +295,7 @@ class Detail:
         self.type.grid(column = 1, row = 2)
         self.type.current()
 
-       # Description Input
+        # Description Input
         Label(frame, text = 'Description: ').grid(row = 3, column = 0)
         self.description = Text(frame, height = 5, width = 30)
         self.description.grid(row = 3, column = 1)
@@ -457,38 +456,38 @@ class Detail:
     def update_Detail(self):
         self.message['text'] = ''
 
-        # get selected detail object
+        # get selected Detail object
         curItem = self.tree.focus()
-        Detail_oject = self.tree.item(curItem)                      
+        detail_oject = self.tree.item(curItem)                      
 
-        if Detail_oject['values']:
+        if detail_oject['values']:
             
             self.message['text'] = ''
             
-            Detail_id =  Detail_oject['values'][0]
-            Detail_name =  Detail_oject['values'][1]
-            Detail_type =  Detail_oject['values'][2]
-            Detail_descrition =  Detail_oject['values'][3]
-            Detail_master_id =  Detail_oject['values'][4]
+            detail_name =  detail_oject['values'][0]
+            detail_type =  detail_oject['values'][1]
+            detail_descrition =  detail_oject['values'][2]
+            detail_master_name =  detail_oject['values'][3]
             
-            query = f"select name from {g_master_table_name} where id = ?"
-            result_row = run_query(query, (Detail_master_id,))
-            result = result_row.fetchone()
-            Detail_master_name = result[0]
+            query = f"select name from {g_master_table_name} where name = ?"
+            result = run_query(query, (detail_name,))
+            print(result)
+            id_row = result.fetchone()
+            selected_id = id_row[0]
            
             self.update_wind = Toplevel()
-            self.update_wind.title('update Detail')
+            self.update_wind.title('Update detail')
             self.update_wind.minsize(250,120)
 
             # Name
             Label(self.update_wind, text = 'Name:').grid(row = 0, column = 1)
-            u_name = Entry(self.update_wind, textvariable = StringVar(self.update_wind, value = Detail_name))
+            u_name = Entry(self.update_wind, textvariable = StringVar(self.update_wind, value = detail_name))
             u_name.grid(row = 0, column = 2)
             
             # type 
             Label(self.update_wind, text = 'Type:').grid(row = 1, column = 1)
             n = tk.StringVar()
-            n.set(Detail_type)
+            n.set(detail_type)
             u_type = ttk.Combobox(self.update_wind, width = 17, textvariable = n)
             
             # Adding combobox drop down list
@@ -496,13 +495,13 @@ class Detail:
             u_type.grid(column = 2, row = 1)
             
             Label(self.update_wind, text = 'Desctiption :').grid(row = 2, column = 1)
-            u_description = Entry(self.update_wind, textvariable = StringVar(self.update_wind, value = Detail_descrition))
+            u_description = Entry(self.update_wind, textvariable = StringVar(self.update_wind, value = detail_descrition))
             u_description.grid(row = 2, column = 2)
 
-             # Master name Input
+            # Master name Input
             Label(self.update_wind, text = 'Master name: ').grid(row = 3, column = 1)
             master_string = tk.StringVar()
-            master_string.set(Detail_master_name)
+            master_string.set(detail_master_name)
             u_mname = ttk.Combobox(self.update_wind, width = 17, textvariable = master_string)
             
             master_name_list = self.get_master_name_list()
@@ -511,7 +510,7 @@ class Detail:
             u_mname.grid(row = 3, column = 2)
             u_mname.current()
 
-            Button(self.update_wind, text = 'Update', command = lambda: self.update_records(Detail_id, u_name.get().strip(), u_type.get().strip(), u_description.get().strip(), u_mname.get().strip())).grid(row = 4, column = 2, sticky = W)
+            Button(self.update_wind, text = 'Update', command = lambda: self.update_records(selected_id, u_name.get().strip(), u_type.get().strip(), u_description.get().strip(), u_mname.get().strip())).grid(row = 4, column = 2, sticky = W)
             self.update_wind.mainloop()
            
         else: 
@@ -522,7 +521,7 @@ class Detail:
     def update_records(self, id, new_name, new_type, new_description, new_master_name_string):
         # must add chck module for name
         query = f'SELECT count(*) FROM {g_detail_table_name} WHERE name = ? and id != ?'
-        parameters = (new_name,id)
+        parameters = (new_name, id)
         name_existance = run_query(query, parameters).fetchone()
         
         # check same name existance
@@ -610,7 +609,7 @@ if __name__ == '__main__':
     master_tab = Master(frame_master, frame_detail)
     detail_tab = Detail(frame_detail)
 
-     # Creating a User role container in User frame
+    # Creating a User role container in User frame
     user_role_frame = LabelFrame(frame_user, text = 'Select the role')
     user_role_frame.grid(row = 0, column = 0, padx = 400)
     
