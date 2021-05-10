@@ -167,13 +167,10 @@ class Master:
                     
                     self.message['fg'] = 'green'
                     self.message['text'] = 'Master {} added successfully'.format(self.name.get())
-
-                    
                     
                     #refresh Detail tab 
                     new_detail = Detail(frame_detail)
                     new_detail.select_admin()
-                        
             else:
                 self.message['fg'] = 'red'
                 self.message['text'] = 'Name and type are required'
@@ -250,6 +247,10 @@ class Master:
                 self.update_flag = True
             except:
                 pass
+
+            #refresh Detail tab 
+            new_detail = Detail(frame_detail)
+            new_detail.select_admin()
 
             #Button(self.update_wind, text = 'Update', command = lambda: self.update_records(master_id, u_name.get().strip(), u_type.get().strip(), u_description.get().strip())).grid(row = 3, column = 2, sticky = W)
 
