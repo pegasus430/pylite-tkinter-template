@@ -168,9 +168,7 @@ class Master:
                     self.message['fg'] = 'green'
                     self.message['text'] = 'Master {} added successfully'.format(self.name.get())
 
-                    self.name.delete(0, END)
-                    self.type.delete(0, END)
-                    self.description.delete("1.0", "end-1c")
+                    
                     
                     #refresh Detail tab 
                     new_detail = Detail(frame_detail)
@@ -181,6 +179,11 @@ class Master:
                 self.message['text'] = 'Name and type are required'
         else:           # click save button for update
              self.update_records(self.selected_id, self.name.get().strip(), self.type.get().strip(), self.description.get("1.0", "end-1c").strip())
+        
+        self.name.delete(0, END)
+        self.type.delete(0, END)
+        self.description.delete("1.0", "end-1c")
+
         self.get_Masters()
 
     def delete_Master(self, frame_detail):
@@ -205,7 +208,9 @@ class Master:
             self.message['text'] = 'Record {} deleted successfully'.format(master_name)
             
             self.get_Masters()
-            Detail(frame_detail)
+            #refresh Detail tab 
+            new_detail = Detail(frame_detail)
+            new_detail.select_admin()
         else: 
             self.message['fg'] = 'red'
             self.message['text'] = 'Please select a record'
@@ -250,7 +255,7 @@ class Master:
 
         else: 
             self.message['fg'] = 'red'
-            self.message['text'] = 'Please select a Record'
+            self.message['text'] = 'Please select a record'
             return
         
     def update_records(self, id, new_name, new_type, new_description):
@@ -270,11 +275,13 @@ class Master:
             
             self.message['fg'] = 'green'
             self.message['text'] = 'Record {} updated successfully'.format(new_name)
-            # self.get_Masters()
+            self.update_flag = False
 
 class Detail:
     def __init__(self, frame_container):
-
+        
+        self.selected_id = 0
+        self.update_flag = False
         # Creating a Frame Container 
         frame = LabelFrame(frame_container, text = 'Detail')
         frame.grid(row = 0, column = 0, columnspan = 5, pady = 10)
@@ -305,9 +312,9 @@ class Detail:
         n = tk.StringVar()
         self.m_name = ttk.Combobox(frame, width = 17, textvariable = n)
         
-        master_name_list = self.get_master_name_list()
+        self.master_name_list = self.get_master_name_list()
 
-        self.m_name['values'] = master_name_list
+        self.m_name['values'] = self.master_name_list
         self.m_name.grid(row = 4, column = 1)
         self.m_name.current()
 
@@ -405,29 +412,38 @@ class Detail:
         return len(self.name.get()) != 0 and len(self.type.get()) != 0 and len(self.m_name.get()) != 0
 
     def add_Detail(self):
-        if self.validation():
-            query = f'SELECT count(*) FROM {g_detail_table_name} WHERE name = ?'
-            parameters = (self.name.get().strip(),)
-            name_existance = run_query(query, parameters).fetchone()
-           
-            # check same name existance
-            if name_existance[0]:                                        
-                self.message['fg'] = 'red'
-                self.message['text'] = 'Detail {} exists, choose another name.'.format(self.name.get().strip())
-            else:
-                query = f'INSERT INTO {g_detail_table_name} (name, type, description, master_id)  VALUES(?, ?, ?, (SELECT id from {g_master_table_name} where name = ?))'
-                parameters =  (self.name.get().strip(), self.type.get().strip(), self.description.get("1.0", "end-1c").strip(), self.m_name.get().strip())
-                run_query(query, parameters)
-                
-                self.message['fg'] = 'green'
-                self.message['text'] = 'Detail {} added Successfully'.format(self.name.get())
+        if not self.update_flag: 
+            if self.validation():
+                query = f'SELECT count(*) FROM {g_detail_table_name} WHERE name = ?'
+                parameters = (self.name.get().strip(),)
+                name_existance = run_query(query, parameters).fetchone()
+            
+                # check same name existance
+                if name_existance[0]:                                        
+                    self.message['fg'] = 'red'
+                    self.message['text'] = 'Detail {} exists, choose another name.'.format(self.name.get().strip())
+                else:
+                    query = f'INSERT INTO {g_detail_table_name} (name, type, description, master_id)  VALUES(?, ?, ?, (SELECT id from {g_master_table_name} where name = ?))'
+                    parameters =  (self.name.get().strip(), self.type.get().strip(), self.description.get("1.0", "end-1c").strip(), self.m_name.get().strip())
+                    run_query(query, parameters)
+                    
+                    self.message['fg'] = 'green'
+                    self.message['text'] = 'Detail {} added Successfully'.format(self.name.get())
 
-                self.name.delete(0, END)
-                self.type.delete(0, END)
-                self.description.delete("1.0", "end-1c")
+                    self.name.delete(0, END)
+                    self.type.delete(0, END)
+                    self.description.delete("1.0", "end-1c")
+            else:
+                self.message['fg'] = 'red'
+                self.message['text'] = 'Name, type and parent master are required'
         else:
-            self.message['fg'] = 'red'
-            self.message['text'] = 'Name, type and parent master are required'
+             self.update_records(self.selected_id, self.name.get().strip(), self.type.get().strip(), self.description.get("1.0", "end-1c").strip(), self.m_name.get().strip())
+        
+        
+        self.name.delete(0, END)
+        self.type.delete(0, END)
+        self.description.delete("1.0", "end-1c")
+        self.m_name.delete(0, END)
         self.get_Details()
 
     def delete_Detail(self):
@@ -440,10 +456,10 @@ class Detail:
             self.get_Details()
             self.message['text'] = ''
             
-            Detail_id =  Detail_oject['values'][0]
-            Detail_name =  Detail_oject['values'][1]
-            query = f'DELETE FROM {g_detail_table_name} WHERE id = ?'
-            run_query(query, (Detail_id, ))
+           
+            Detail_name =  Detail_oject['values'][0]
+            query = f'DELETE FROM {g_detail_table_name} WHERE name = ?'
+            run_query(query, (Detail_name, ))
             self.message['fg'] = 'green'
             self.message['text'] = 'Record {} deleted successfully'.format(Detail_name)
             
@@ -469,53 +485,35 @@ class Detail:
             detail_descrition =  detail_oject['values'][2]
             detail_master_name =  detail_oject['values'][3]
             
-            query = f"select name from {g_master_table_name} where name = ?"
+            query = f"select id from {g_detail_table_name} where name = ?"
             result = run_query(query, (detail_name,))
-            print(result)
+            
             id_row = result.fetchone()
-            selected_id = id_row[0]
-           
-            self.update_wind = Toplevel()
-            self.update_wind.title('Update detail')
-            self.update_wind.minsize(250,120)
+            self.selected_id = id_row[0]
 
-            # Name
-            Label(self.update_wind, text = 'Name:').grid(row = 0, column = 1)
-            u_name = Entry(self.update_wind, textvariable = StringVar(self.update_wind, value = detail_name))
-            u_name.grid(row = 0, column = 2)
-            
-            # type 
-            Label(self.update_wind, text = 'Type:').grid(row = 1, column = 1)
-            n = tk.StringVar()
-            n.set(detail_type)
-            u_type = ttk.Combobox(self.update_wind, width = 17, textvariable = n)
-            
-            # Adding combobox drop down list
-            u_type['values'] = detail_type_list
-            u_type.grid(column = 2, row = 1)
-            
-            Label(self.update_wind, text = 'Desctiption :').grid(row = 2, column = 1)
-            u_description = Entry(self.update_wind, textvariable = StringVar(self.update_wind, value = detail_descrition))
-            u_description.grid(row = 2, column = 2)
+            try :
+                self.name.delete(0, END)
+                self.name.insert(0, detail_name)
 
-            # Master name Input
-            Label(self.update_wind, text = 'Master name: ').grid(row = 3, column = 1)
-            master_string = tk.StringVar()
-            master_string.set(detail_master_name)
-            u_mname = ttk.Combobox(self.update_wind, width = 17, textvariable = master_string)
+                type_of_index = detail_type_list.index(detail_type)
+                self.type.current(type_of_index)   
+
+                if self.description.get('1.0', "end-1c") != '':
+                    self.description.delete('1.0', "end-1c")
+                    
+                self.description.insert(END,  detail_descrition)   
             
-            master_name_list = self.get_master_name_list()
+                type_of_index = self.master_name_list.index(detail_master_name)
+                
+                self.m_name.current(type_of_index)   
+        
+                self.update_flag = True
+            except:
+                pass
 
-            u_mname['values'] = master_name_list
-            u_mname.grid(row = 3, column = 2)
-            u_mname.current()
-
-            Button(self.update_wind, text = 'Update', command = lambda: self.update_records(selected_id, u_name.get().strip(), u_type.get().strip(), u_description.get().strip(), u_mname.get().strip())).grid(row = 4, column = 2, sticky = W)
-            self.update_wind.mainloop()
-           
         else: 
             self.message['fg'] = 'red'
-            self.message['text'] = 'Please select a Record'
+            self.message['text'] = 'Please select a record'
             return
         
     def update_records(self, id, new_name, new_type, new_description, new_master_name_string):
@@ -527,15 +525,17 @@ class Detail:
         # check same name existance
         if name_existance[0]:                                        
             self.message['fg'] = 'red'
-            self.message['text'] = 'Detail {} is already added. please insert another name !'.format(new_name)
+            self.message['text'] = 'Detail {} exists. please choose another name !'.format(new_name)
         else:
-            query = f'UPDATE {g_detail_table_name} SET name = ?, type = ? , description = ? , master_id= (select id from {g_master_table_name} where name = ? )WHERE id= ?'
+            query = f'UPDATE {g_detail_table_name} SET name = ?, type = ? , description = ? , master_id= (select id from {g_master_table_name} where name = ? ) WHERE id= ?'
+            print(new_name, new_type, new_description , new_master_name_string, id)
             parameters = (new_name, new_type, new_description , new_master_name_string, id)
             run_query(query, parameters)
-            self.update_wind.destroy()
+            
             self.message['fg'] = 'green'
             self.message['text'] = 'Record {} updated successfully'.format(new_name)
-            self.get_Details()
+            self.update_flag = False
+         
 
 # call back function to open help window as top level
 def helloCallBack():
